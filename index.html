@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Selfspy-vis : Visualization of Selfspy Database. Using gurgeh/selfspy.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Selfspy-vis</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Naereen/selfspy-vis">View on GitHub</a>
+
+          <h1 id="project_title">Selfspy-vis</h1>
+          <h2 id="project_tagline">Visualization of Selfspy Database. Using gurgeh/selfspy.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/Naereen/selfspy-vis/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/Naereen/selfspy-vis/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="visualization-for-selfspy" class="anchor" href="#visualization-for-selfspy" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Visualization for selfspy</h1>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>Install <a href="https://github.com/gurgeh/selfspy">selfspy</a>, then the requirements with</p>
+
+<pre><code>pip install -r requirements.txt
+</code></pre>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>The script is a modified version of the <a href="https://github.com/gurgeh/selfspy#example-statistics"><code>selfstats</code> program</a>.
+The same options apply. Try e.g.</p>
+
+<pre><code>python vis.py
+</code></pre>
+
+<h2>
+<a id="status" class="anchor" href="#status" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Status</h2>
+
+<p>Currently implemented is a breakdown of hours (stacked bar chart) and a pie
+chart (all time totals). Both plots are saved for clicks and for keypresses,
+respectively.</p>
+
+<p>It's very likely that long intervals aren't split correctly.</p>
+
+<p>Filtering options of original <code>selfstats</code> continue to work.</p>
+
+<hr>
+
+<h2>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examples</h2>
+
+<p>For example, run</p>
+
+<pre><code>selfvis.py --human-readable --pactive
+selfvis.py --human-readable --ratios
+</code></pre>
+
+<h3>
+<a id="clicks" class="anchor" href="#clicks" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Clicks</h3>
+
+<p><img src="https://raw.githubusercontent.com/Naereen/selfspy-vis/master/clicks-hours.png" alt="Clicks Hours"></p>
+
+<p><img src="https://raw.githubusercontent.com/Naereen/selfspy-vis/master/clicks-total.png" alt="Clicks Total"></p>
+
+<h3>
+<a id="keystrokes" class="anchor" href="#keystrokes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Keystrokes</h3>
+
+<p><img src="https://raw.githubusercontent.com/Naereen/selfspy-vis/master/keystrokes-hours.png" alt="Keystrokes Hours"></p>
+
+<p><img src="https://raw.githubusercontent.com/Naereen/selfspy-vis/master/keystrokes-total.png" alt="Keystrokes Total"></p>
+
+<h3>
+<a id="processes" class="anchor" href="#processes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Processes</h3>
+
+<blockquote>
+<p>Not yet.</p>
+</blockquote>
+
+<hr>
+
+<h2>
+<a id="config" class="anchor" href="#config" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Config</h2>
+
+<p>In  <code>~/.selfspy/simplification_rules.txt</code>, add rules of the form
+<code>regexp --&gt; name</code></p>
+
+<p>For examples:</p>
+
+<pre><code>^\s*::\s*$ --&gt; unknown
+^(.+)::\s*$ --&gt; \1
+^(.+)::.*$ --&gt; \1
+# ^(.+)::(\w+).*$ --&gt; \1:\2
+^Firefox::.*YouTube.*$ --&gt; Browser (Youtube)
+^Firefox::.*GitHub.*$ --&gt; Browser (GitHub)
+^Firefox::.*Google Search.*$ --&gt; Browser (search)
+# ^.*Skype.*$ --&gt; Skype
+# ^.*Zimbra.*$ --&gt; Mail
+# ^.*\bmutt\b.*$ --&gt; Mail
+# ^.*\bzsh\b.*$ --&gt; shell
+</code></pre>
+
+<p>to keep descriptions in legends short and expressive.
+Last matching rule (LHS) wins.</p>
+
+<p>See <a href="https://raw.githubusercontent.com/Naereen/selfspy-vis/master//simplification_rules.txt">this example</a> for the rules I like.</p>
+
+<hr>
+
+<h2>
+<a id="faq" class="anchor" href="#faq" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FAQ</h2>
+
+<h4>
+<a id="is-it-supposed-to-be-that-slow" class="anchor" href="#is-it-supposed-to-be-that-slow" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><em>Is it supposed to be that slow?</em>
+</h4>
+
+<blockquote>
+<p>Yup, don't expect your graphs to be produced in two seconds, it can take upto 15 seconds.</p>
+</blockquote>
+
+<h4>
+<a id="can-i-" class="anchor" href="#can-i-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><em>Can I ...?</em>
+</h4>
+
+<blockquote>
+<p>Yes, as long as you respect <a href="./LICENSE">the terms of the GPLv3 License</a>.</p>
+</blockquote>
+
+<hr>
+
+<h2>
+<a id="about" class="anchor" href="#about" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>About</h2>
+
+<h3>
+<a id="authors" class="anchor" href="#authors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authors?</h3>
+
+<ul>
+<li>Original author: <a href="https://github.com/temporaer/selfspy-vis">Hannes Schulz (temporaer)</a>,</li>
+<li>Forked by: <a href="https://github.com/Naereen/">Lilian Besson (Naereen)</a>.</li>
+</ul>
+
+<h3>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License?</h3>
+
+<p><a href="./LICENSE">GPL v3</a>.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Selfspy-vis maintained by <a href="https://github.com/Naereen">Naereen</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-38514290-17");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
