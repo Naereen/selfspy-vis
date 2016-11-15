@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 """
 selfspy-vis
 
@@ -32,7 +32,7 @@ import sys
 import re
 import datetime
 import time
-# import seaborn as sns
+import seaborn as sns
 
 import argparse
 import ConfigParser
@@ -363,6 +363,7 @@ class Selfstats(object):
         import matplotlib.pyplot as plt
         import matplotlib
         matplotlib.interactive(False)
+        sns.set_style("white")
         L = []
         idx = []
         Lt = {}
@@ -384,54 +385,103 @@ class Selfstats(object):
             else:
                 Lt[p] = s
 
-        def make_others(D, n=5):
+        def make_others(D, n=7):
+            if 'other' in D.keys():
+                D = D.drop('other', 1)
             keys = list(x for x in D.keys())
             keys = sorted(keys, key=lambda x: D[x].sum(), reverse=True)
             keys = keys[:n]
-            D2 = D[keys].copy()
 
             other_keys = [t for t in D.keys()
                           if t not in keys]
+
             if len(other_keys) < 2:
                 return D
 
             if isinstance(D[other_keys[0]], int):
+                D2 = D[keys].copy()
                 D2['other'] = sum(D[k] for k in other_keys)
                 return D2
 
             s = D[other_keys[0]]
-            s.name = "other"
-            other = pd.DataFrame(s, index=s.index)
             for k in other_keys[1:]:
-                s = D[k]
-                s.name = "other"
-                other = pd.merge(other, pd.DataFrame(s), how="outer", left_index=True, right_index=True)
-                # other = pd.merge(other, s, how="outer", left_index=True, right_index=True)
-            other = other.sum(axis=1)
-            # other[0].name = "other"
-            D2['other'] = other
-            # print(D2['other'])
+                s = pd.concat((s, D[k]))
+                continue
+            D2 = D.join(pd.DataFrame(dict(other=s)))
+
+            keys += 'other',
+
+            D2 = D2[keys]
+
             return D2
 
+        # from IPython.core.debugger import Tracer; Tracer()()
         df = pd.DataFrame(L, index=idx)
         df = make_others(df[unit])
-        df.plot(kind='pie', y=unit)
+        with sns.color_palette("Set2", len(df.index)):
+            df.plot(kind='pie', y=unit)
         plt.savefig(unit + "-total.png")
         plt.clf()
 
         from matplotlib import dates as mpldates
+        from matplotlib.dates import DateFormatter, MinuteLocator, SecondLocator, HourLocator
 
         hfmt = mpldates.DateFormatter('%m/%d %H:%M')
 
         Lt = [pd.DataFrame({k: v}) for k, v in Lt.iteritems()]
         df = pd.concat(Lt, axis=0)
-        df = df.resample('30Min', how='sum', label='left')
-        df = df.ix[1:]
-        v = (np.cumsum(df.sum(axis=1).fillna(0)) == 0).sum()
-        df = df.ix[v:]
+        df = make_others(df)
+        df['all'] = df.sum(axis=1)
+        for k in df.columns:
+            df[k] = pd.to_timedelta(df[k], unit='s')
+        # plot the timeline, maybe join close events later
+        fig, ax = plt.subplots(1,1)
+        gxmin, gxmax = df.index.min(), df.index.max()
+        pal = sns.color_palette("Set2", len(df.columns))
+        for idx, (col, c) in enumerate(zip(df.columns, pal)):
+            s = df[col].dropna()
+            if len(s) < 2:
+                continue
+            xmin = np.array(pd.Series(s.index))
+            xmax = xmin + np.array(s)
+            # http://stackoverflow.com/questions/13703720/converting-between-datetime-timestamp-and-datetime64
+            gxmax = max(gxmax, datetime.datetime.utcfromtimestamp(xmax.max().astype(int) * 1e-9))
+            xmax = np.array(xmax)
+            y = np.ones(len(xmin))*idx
+            plt.hlines(y, xmin, xmax, lw=4, color=c)
+        ax.xaxis_date()
+        myFmt = DateFormatter('%h %d %H')
+        ax.xaxis.set_major_formatter(myFmt)
+        #ax.xaxis.set_major_locator(HourLocator(interval=1))
+        plt.yticks(np.arange(len(df.columns)), df.columns)
+        labels = ax.get_xticklabels()
+        plt.setp(labels, rotation=30, fontsize=10)
+        #plt.xlim(gxmin, gxmax)
+        plt.ylim(-1, len(df.columns))
+        plt.savefig(unit + '-timeline.png')
+        plt.clf()
+        df.drop('all', 1, inplace=True)
+
+        # sometimes, this becomes "O" for some reason
+        df2 = df.groupby(df.index.hour).sum()
+        for k in df2.columns:
+            df2[k] =  pd.to_timedelta(df2[k])
+        (df2.astype('timedelta64[s]')/3600000).plot(kind='bar', stacked=True, width=0.95, title="Average day " + unit,
+                    color=sns.color_palette("Set2", len(df.columns)))
+        outfile = unit + "-avgday.png"
+        plt.xlabel('hour of the day')
+        plt.ylabel('accumulated time (hours)')
+        plt.savefig(outfile)
+        plt.clf()
+
+        df = df.astype('timedelta64[s]')/3600000
+        df = df.resample(self.args['resample'], label='left').sum()
+        #df = df.ix[1:]
+        #v = (np.cumsum(df.sum(axis=1).fillna(0)) == 0).sum()
+        #df = df.ix[v:]
         df = make_others(df)  # .dropna(how='all')
         # from IPython.core.debugger import Tracer; Tracer()()
-        df.plot(kind='bar', stacked=True, width=0.95, title=unit)
+        df.plot(kind='bar', stacked=True, width=0.95, title=unit, color=sns.color_palette("Set2", len(df.columns)))
         formatted_ticks = df.index.map(lambda t: t.strftime('%m/%d %H:%M'))
         plt.gca().set_xticklabels(formatted_ticks)
         outfile = unit + "-hours.png"
@@ -495,7 +545,7 @@ class Selfstats(object):
         self.windows = windows
         self.summary = sumd
         self.click_pie(windows, 'keystrokes')
-        self.click_pie(windows, 'clicks')
+        #self.click_pie(windows, 'clicks')
         if self.args['key_freqs']:
             self.summary['key_freqs'] = keys
 
@@ -644,6 +694,8 @@ def parse_config():
     parser.add_argument('-C', '--clock', type=str, help='Time to start the listing or summarizing from. Given in 24 hour format as --clock 13:25. If no --date is given, interpret the time as today if that results in sometimes in the past, otherwise as yesterday.')
 
     parser.add_argument('-i', '--id', type=int, help='Which row ID to start the listing or summarizing from. If --date and/or --clock is given, this option is ignored.')
+
+    parser.add_argument('--resample', default='30Min', help='resample interval (how much one bar represents in the bar plot)')
 
     parser.add_argument('-b', '--back', nargs='+', type=str, help='--back <period> [<unit>] Start the listing or summary this much back in time. Use this as an alternative to --date, --clock and --id. If any of those are given, this option is ignored. <unit> is either "s" (seconds), "m" (minutes), "h" (hours), "d" (days) or "w" (weeks). If no unit is given, it is assumed to be hours.')
 
